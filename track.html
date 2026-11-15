@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Track your order | ML Jewellery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W4 Order tracking
+// Opens on the sample order so the page is never empty; sample buttons fill in other stages.
+const SAMPLES = ['ML-0126', 'ML-0125', 'ML-0123', 'ML-0127', 'ML-0124', 'ML-0118'];
+const ui = { track: mem('track') || { no: 'ML-0123', phone: order('ML-0123')?.phone || '0771234567' } };
+page({
+  view: () => {
+    const t = ui.track, o = t && S.orders.find(o => o.id.toLowerCase() === t.no.trim().toLowerCase() && dig(o.phone) === dig(t.phone)), cur = o ? STAGES.indexOf(o.stage) : -1, d = o && designOf(o);
+    return shop('track', `<h1>Track your order</h1>
+<form data-form="track" class="row" style="align-items:flex-end;max-width:860px">
+  <div style="flex:1;min-width:200px">${fld('Order number', `<input name="no" required placeholder="ML-0123" value="${esc(t?.no)}">`)}</div>
+  <div style="flex:1;min-width:200px">${fld('Phone number', `<input name="phone" type="tel" required value="${esc(t?.phone)}">`)}</div>
+  <button class="btn" style="margin-bottom:16px">Check status</button>
+</form>
+${t && !o ? '<p class="err" role="alert">No order matches that number and phone. Check both and try again.</p>' : ''}
+${o ? `<ol class="strand" aria-label="Order progress">${STAGES.map((s, i) => `<li class="${i <= cur ? 'done' : ''}${i === cur ? ' now' : ''}"${i === cur ? ' aria-current="step"' : ''}>${s}</li>`).join('')}</ol>
+<div class="cols2 stack" style="gap:28px;align-items:start">
+  <div class="panel pad">
+    <div class="orderitem">${d ? pic(d.photos[0], '') : ''}<div><span class="mute small">Order ${o.id}</span><br><b>${esc(o.item)}</b></div></div>
+    <dl class="facts"><dt>Current stage</dt><dd>${o.stage}</dd><dt>${o.stage === 'Delivered' ? 'Ready date' : 'Expected ready date'}</dt><dd>${fd(o.due, 1)}</dd><dt>Ordered through</dt><dd>${o.source}</dd>${o.budget ? `<dt>Budget</dt><dd>${rs(o.budget)}</dd>` : ''}</dl>
+    <p class="mute small">Last updated by the owner on ${fd(o.updated, 1)}. Questions? Message the owner on WhatsApp and quote ${o.id}.</p>
+  </div>
+  <div class="panel pad">
+    <h2 style="margin-top:0">Updates</h2>
+    <ol class="updates">${updates(o).map(u => `<li><time datetime="${u.date}">${fd(u.date)}</time><div><b>${u.stage}</b><span>${u.note}</span></div></li>`).join('')}</ol>
+  </div>
+</div>` : ''}
+<div class="samples">
+  <p class="small mute" style="margin-bottom:10px">Prototype sample orders. Choose one to see that stage.</p>
+  <div class="row">${SAMPLES.map(order).filter(Boolean).map(s => `<button class="btn ghost sm" id="sample-${s.id}" data-act="sample" data-id="${s.id}"${s.id === o?.id ? ' aria-pressed="true"' : ''}>${s.id}, ${s.stage.toLowerCase()}</button>`).join('')}</div>
+</div>`);
+  },
+  acts: { sample: x => { const s = order(x.id); ui.track = { no: s.id, phone: s.phone }; mem('track', ui.track); } },
+  forms: { track: v => { ui.track = v; mem('track', v); } },
+});
+</script>
+</body>
+</html>

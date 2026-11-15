@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Request a custom piece | ML Jewellery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W3 Custom request form
+const ui = { sent: null };
+const like = byId(Q.get('like'));
+page({
+  view: () => ui.sent
+    ? shop('request', `<p class="mute">Request sent. Your order number is</p><p class="orderno num">${ui.sent}</p>
+<p style="max-width:46ch">Keep this number to track your order. The owner will reply to your number to agree the design and price.</p>
+<div class="row" style="margin-top:24px"><a class="btn" href="track.html">Track this order</a><a class="btn ghost" href="index.html">Back to the shop</a></div>`)
+    : shop('request', `<h1>Request a custom piece</h1>
+${like ? `<div class="like">${pic(like.photos[0], '')}<div><span class="mute small">Similar to</span><br><b>${esc(like.name)}</b></div></div>` : ''}
+<form data-form="request" class="cols2 stack" style="gap:clamp(20px,4vw,56px)">
+  <div>
+    ${fld('Your name', '<input name="customer" required autocomplete="name">')}
+    ${fld('Phone or WhatsApp number', '<input name="phone" type="tel" required pattern="[0-9+ ]{9,15}" title="9 to 15 digits" autocomplete="tel">')}
+    ${fld('Type of piece', `<select name="type" required>${opts([...TYPES, 'Other'], like?.type, 'Choose one')}</select>`)}
+    <div class="cols2">${fld('Budget (Rs.)', '<input name="budget" type="number" min="0" step="100">')}${fld('Needed by', `<input name="due" type="date" min="${TODAY}">`)}</div>
+    <p class="mute small">The owner will reply to your number.</p>
+  </div>
+  <div>
+    ${fld('Describe what you have in mind', `<textarea name="notes" required style="min-height:160px">${like ? `Something similar to the ${esc(like.name)}. ` : ''}</textarea>`)}
+    <div class="f"><span>Upload inspiration photos</span><label class="drop"><input type="file" name="photos" accept="image/*" multiple data-ch="files" aria-label="Upload inspiration photos"><span id="fileMsg">Drop photos here or click to upload</span></label></div>
+    <button class="btn" style="min-width:200px">Send request</button>
+  </div>
+</form>`),
+  changes: {
+    files: (v, d, el) => { $('#fileMsg').textContent = el.files.length ? `${el.files.length} photo${el.files.length > 1 ? 's' : ''} selected` : 'Drop photos here or click to upload'; return false; },
+  },
+  forms: {
+    request: async (v, f) => {
+      const id = nextOrderId();
+      const photos = await Promise.all([...f.photos.files].slice(0, 3).map(shrink)); // ponytail: 3 small photos max, localStorage is tiny; real uploads need a server
+      S.orders.push({ id, designId: like?.id, item: like ? like.name : v.type === 'Other' ? 'Custom piece' : 'Custom ' + v.type.toLowerCase(), customer: v.customer, phone: v.phone, source: 'Website', stage: 'Received', due: v.due || plus(TODAY, 21), budget: +v.budget || 0, notes: v.notes, assigned: false, done: false, updated: TODAY, photos });
+      mem('track', { no: id, phone: v.phone });
+      ui.sent = id;
+    },
+  },
+});
+</script>
+</body>
+</html>

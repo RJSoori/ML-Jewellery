@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard | ML Jewellery owner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W5 Owner dashboard
+page({
+  view: () => {
+    const open = S.orders.filter(isOpen), low = S.materials.map((m, i) => [m, i]).filter(([m]) => isLow(m)), late = open.filter(isOver);
+    return owner('dashboard', `<div class="head"><h1>Dashboard</h1><span class="mute push">${new Date(TODAY + 'T00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
+<div class="stats">
+  <div>Open orders<b class="num">${open.length}</b></div>
+  <div>Due this week<b class="num">${open.filter(dueSoon).length}</b></div>
+  <div>Low stock alerts<b class="num">${low.length}</b></div>
+  <div>Income this month<b class="num">${rs(MONTHS['November 2026'].income)}</b></div>
+</div>
+${late.length ? `<p class="tag warn" style="margin:18px 0 0"><i></i>${late.length} order${late.length > 1 ? 's are' : ' is'} past the due date: ${late.map(o => `<a href="owner-orders.html?id=${o.id}">${o.id}</a>`).join(', ')}</p>` : ''}
+<div class="split" style="grid-template-columns:minmax(0,3fr) minmax(0,2fr)">
+  <div><h2>Orders due soon</h2>
+  ${table(['Order', 'Item', 'Stage', 'Due date'], open.filter(o => o.due >= TODAY).sort((a, b) => a.due < b.due ? -1 : 1).slice(0, 5).map(o => row([o.id, esc(o.item), stageTag(o.stage), fd(o.due)], pick('openOrder', o.id))), 'No open orders.')}</div>
+  <div><h2>Low stock alerts</h2>
+  <div class="panel">${low.map(([m, i]) => `<div class="alert"><div><b>${esc(m.name)}</b><span class="mute small">${qty(m.stock, m.unit)} left, minimum ${m.min}</span></div><a class="btn ghost sm" href="owner-inventory.html?buy=${i}">Record purchase</a></div>`).join('') || '<p class="mute" style="padding:18px;margin:0">All materials are above their minimum.</p>'}</div></div>
+</div>`);
+  },
+  acts: { openOrder: d => { location.href = 'owner-orders.html?id=' + d.id; } },
+});
+</script>
+</body>
+</html>

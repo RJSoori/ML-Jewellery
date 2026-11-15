@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product pages | ML Jewellery owner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W11 Product page editor with AI draft approval
+const ui = { id: Q.get('id') || 'pearl-drop', edit: null, draft: null, draftEdit: false };
+page({
+  view: () => {
+    const d = byId(ui.id) || S.designs[0];
+    if (ui.edit?.id !== d.id) { ui.edit = { id: d.id, name: d.name, materials: d.materials, craft: d.craft, care: d.care }; ui.draft = null; ui.draftEdit = false; }
+    const e = ui.edit, t = ui.draft;
+    return owner('pages', `<div class="head"><h1>Edit product page</h1>${d.published ? `<a class="push" href="product.html?id=${d.id}">View page in the shop</a>` : '<span class="mute push">Not published yet</span>'}</div>
+<div class="split" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+  <form data-form="page">
+    ${fld('Product', `<select id="pSel" data-ch="design">${opts(S.designs.map(d => [d.id, d.name + (d.published ? '' : ' (not published)')]), d.id)}</select>`)}
+    ${fld('Product name', `<input id="eName" required data-in="name" value="${esc(e.name)}">`)}
+    ${fld('Materials', `<input id="eMat" required data-in="materials" value="${esc(e.materials)}">`)}
+    ${fld('Craft story', `<textarea id="eCraft" required data-in="craft" placeholder="Short note on how it is made">${esc(e.craft)}</textarea>`)}
+    ${fld('Care guide', `<textarea id="eCare" required data-in="care" placeholder="How to look after the piece">${esc(e.care)}</textarea>`)}
+    <div class="row"><button class="btn ghost" type="button" data-act="aiDraft">Draft with AI</button><button class="btn" style="flex:1">Save and publish</button></div>
+  </form>
+  <div class="panel pad sticky">${t ? `
+    <h2>AI draft (not published)</h2>
+    <h3>Craft story</h3>${ui.draftEdit ? `<textarea id="tCraft" data-in="tCraft" aria-label="Draft craft story">${esc(t.craft)}</textarea>` : `<p>${esc(t.craft)}</p>`}
+    <h3>Care guide</h3>${ui.draftEdit ? `<textarea id="tCare" data-in="tCare" aria-label="Draft care guide">${esc(t.care)}</textarea>` : `<p>${esc(t.care)}</p>`}
+    <p class="mute small" style="margin:18px 0">The owner must approve the draft before it appears on the page.</p>
+    <div class="row"><button class="btn" data-act="approve">Approve</button><button class="btn ghost" data-act="editDraft">Edit</button><button class="btn ghost" data-act="discard">Discard</button></div>`
+    : `<h2>AI draft</h2><p class="mute">No draft yet. Choose "Draft with AI" for a first version of the craft story and care guide. Nothing is published until you approve it and save.</p>`}</div>
+</div>`);
+  },
+  acts: {
+    // ponytail: canned template, no model call; point this at an LLM endpoint when there is a backend
+    aiDraft: () => {
+      const e = ui.edit; if (!e.name.trim()) return toast('Add a product name first');
+      ui.draft = { craft: `Each ${e.name.toLowerCase()} is shaped and finished by hand${e.materials.trim() ? ' using ' + e.materials.toLowerCase() : ''}, so no two are exactly alike.`, care: 'Keep away from water and perfume. Wipe with a soft cloth after wearing and store in the pouch.' };
+      ui.draftEdit = false;
+    },
+    approve: () => { Object.assign(ui.edit, ui.draft); ui.draft = null; toast('Draft approved. Check it, then save and publish.'); },
+    editDraft: () => ui.draftEdit = true,
+    discard: () => { ui.draft = null; toast('Draft discarded'); },
+  },
+  changes: { design: v => { ui.id = v; } },
+  inputs: {
+    name: v => ui.edit.name = v, materials: v => ui.edit.materials = v, craft: v => ui.edit.craft = v, care: v => ui.edit.care = v,
+    tCraft: v => ui.draft.craft = v, tCare: v => ui.draft.care = v,
+  },
+  forms: {
+    page: () => { const e = ui.edit, d = byId(e.id); Object.assign(d, { name: e.name, materials: e.materials, craft: e.craft, care: e.care, published: true }); toast(`${d.name} page published`); },
+  },
+});
+</script>
+</body>
+</html>

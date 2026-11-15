@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventory | ML Jewellery owner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W7 Inventory and purchases
+const ui = { buy: Q.get('buy') ?? '' };
+page({
+  view: () => owner('inventory', `<div class="head"><h1>Inventory</h1></div>
+<div class="split">
+  <div>
+    ${table(['Material', 'In stock', 'Minimum', 'Status'], S.materials.map((m, i) => row([esc(m.name), `<span class="num">${qty(m.stock, m.unit)}</span>`,
+      `<input id="min${i}" class="mini num" type="number" min="0" value="${m.min}" data-ch="min" data-id="${i}" aria-label="Minimum level for ${esc(m.name)}">`,
+      isLow(m) ? '<span class="tag warn"><i></i>Low</span>' : '<span class="tag good"><i></i>OK</span>'])))}
+    <p class="mute small" style="margin-top:14px">Set the minimum level for each material. An alert shows when stock drops to it.</p>
+  </div>
+  <form class="panel pad sticky" data-form="purchase">
+    <h2>Record a purchase</h2>
+    ${fld('Material', `<select id="buyMat" name="mat" required>${opts(S.materials.map((m, i) => [i, m.name]), ui.buy, 'Choose')}</select>`)}
+    ${fld('Quantity bought', '<input name="qty" type="number" min="1" required>')}
+    ${fld('Price paid (Rs.)', '<input name="paid" type="number" min="0" required>')}
+    ${fld('Supplier', `<select name="sup" required>${opts(S.suppliers.map((s, i) => [i, s.name]), '', 'Choose')}</select>`)}
+    <button class="btn block">Save purchase</button>
+  </form>
+</div>`),
+  changes: { min: (v, d) => { S.materials[d.id].min = Math.max(0, +v || 0); } },
+  forms: {
+    purchase: v => {
+      const m = S.materials[v.mat], s = S.suppliers[v.sup], p = s.prices.find(p => p.material === m.name), line = { material: m.name, price: +v.paid, unit: 'for ' + qty(+v.qty, m.unit) };
+      m.stock += +v.qty; s.last = TODAY; S.spent += +v.paid; p ? Object.assign(p, line) : s.prices.push(line); ui.buy = '';
+      toast(`${m.name}: now ${qty(m.stock, m.unit)} in stock${isLow(m) ? ', still low' : ''}`);
+    },
+  },
+});
+</script>
+</body>
+</html>

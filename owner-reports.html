@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monthly report | ML Jewellery owner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W12 Reports
+const ui = { month: 'November 2026' };
+page({
+  view: () => {
+    const m = MONTHS[ui.month], live = ui.month === 'November 2026', exp = m.expenses + (live ? S.spent : 0), max = Math.max(...m.weeks), late = live ? S.orders.filter(isOver) : [];
+    return owner('reports', `<div class="head"><h1>Monthly report</h1>
+  <select id="rMonth" class="pill noprint" data-ch="month" aria-label="Month">${opts(Object.keys(MONTHS), ui.month)}</select>
+  <button class="btn ghost push noprint" data-act="print">Download</button></div>
+<div class="stats">
+  <div>Income<b class="num">${rs(m.income)}</b></div><div>Expenses<b class="num">${rs(exp)}</b></div>
+  <div>Profit<b class="num">${rs(m.income - exp)}</b></div><div>Average time per piece<b class="num">${m.avg} hours</b></div>
+</div>
+<div class="split" style="grid-template-columns:minmax(0,5fr) minmax(0,4fr);gap:44px">
+  <div><h2>Income by week, ${ui.month}</h2>
+    <div class="bars" role="img" aria-label="Income by week: ${m.weeks.map((w, i) => `week ${i + 1} ${rs(w)}`).join(', ')}">${m.weeks.map(w => `<div style="height:${w / max * 100}%"><span class="num">${w / 1000}k</span></div>`).join('')}</div>
+    <div class="barlab">${m.weeks.map((w, i) => `<span>Week ${i + 1}</span>`).join('')}</div></div>
+  <div><h2>Best sellers</h2>${table(['Design', 'Sold'], m.best.map(([n, c]) => row([n, `<span class="num">${c}</span>`])))}</div>
+</div>
+<h2>Overdue orders</h2>
+${table(['Order', 'Item', 'Due date', 'Days late'], late.map(o => row([o.id, esc(o.item), fd(o.due), `<span class="num">${(Date.parse(TODAY) - Date.parse(o.due)) / 864e5}</span>`], pick('openOrder', o.id))), live ? 'No overdue orders.' : 'Past months have no overdue orders.')}`);
+  },
+  acts: { openOrder: d => { location.href = 'owner-orders.html?id=' + d.id; } },
+  changes: { month: v => { ui.month = v; } },
+});
+</script>
+</body>
+</html>

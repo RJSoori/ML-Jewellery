@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suppliers | ML Jewellery owner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W8 Suppliers and substitutes
+const ui = { sup: 0 };
+page({
+  view: () => {
+    const s = S.suppliers[ui.sup], x = S.scarce;
+    return owner('suppliers', `<div class="head"><h1>Suppliers</h1><button class="btn push" data-act="addSupplier">Add supplier</button></div>
+<div class="split" style="grid-template-columns:minmax(0,1fr) 400px">
+  <div>
+    ${table(['Supplier', 'Place', 'Last bought'], S.suppliers.map((v, i) => row([esc(v.name), esc(v.place), v.last ? fd(v.last) : 'Not yet'], pick('sel', i, i === ui.sup))))}
+    <h2>Materials and prices from ${esc(s.name)}</h2>
+    ${table(['Material', 'Last price', 'Unit'], s.prices.map(p => row([esc(p.material), `<span class="num">${rs(p.price)}</span>`, esc(p.unit)])), 'No purchases recorded from this supplier yet.')}
+  </div>
+  <form class="panel pad sticky" data-form="scarce">
+    <p class="mute small" style="margin-bottom:2px">Scarce material</p>
+    <h2 style="margin:0 0 4px;font-size:26px;letter-spacing:-.02em">${x.name}</h2>
+    <p class="mute">Not available from local vendors right now.</p>
+    <h3>Suggested substitutes</h3>
+    ${x.subs.map((t, i) => `<label class="opt"><input type="radio" name="sub" value="${i}" required${x.used === i ? ' checked' : ''}> ${t}</label>`).join('')}
+    <p class="mute small" style="margin:12px 0 18px">The owner decides whether to use a substitute.</p>
+    ${x.used !== null ? `<p class="tag good" style="margin-bottom:14px"><i></i>Using ${x.subs[x.used].toLowerCase()}</p><br>` : ''}
+    <button class="btn">Mark as used</button>
+  </form>
+</div>`);
+  },
+  acts: {
+    sel: d => ui.sup = +d.id,
+    addSupplier: () => dlg('Add supplier', fld('Supplier name', '<input name="name" required>') + fld('Place', '<input name="place" required>'),
+      v => { S.suppliers.push({ ...v, last: '', prices: [] }); ui.sup = S.suppliers.length - 1; toast('Supplier added'); }),
+  },
+  forms: { scarce: v => { S.scarce.used = +v.sub; toast(`Substitute for ${S.scarce.name}: ${S.scarce.subs[v.sub]}`); } },
+});
+</script>
+</body>
+</html>

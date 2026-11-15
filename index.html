@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ML Jewellery | Handmade jewellery, made for you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W1 Home and catalogue
+const ui = { cat: 'All' };
+page({
+  view: () => {
+    const list = S.designs.filter(d => d.published && (ui.cat === 'All' || ui.cat.startsWith(d.type)));
+    return shop('index', `
+<section class="hero">
+  <div>
+    <h1>Handmade jewellery, made for you</h1>
+    <p>Browse the collection or ask for a piece designed just for you.</p>
+    <div class="row" style="gap:14px 28px"><a class="btn" href="request.html">Request a custom piece</a><a href="#collection">Browse the collection</a></div>
+  </div>
+  <figure class="hero-art">
+    <img class="ph" src="images/layered.jpg" alt="Layered gold chain with bar and disc charms on white marble">
+    <img class="ph inset" src="images/studs.jpg" alt="Freshwater pearl studs beside folded blue linen">
+    <figcaption><a href="product.html?id=layered">Layered chain</a>, from ${rs(byId('layered')?.price || 5500)}</figcaption>
+  </figure>
+</section>
+
+<div class="cat-head" id="collection">
+  <h2>The collection</h2>
+  <div class="tabs" role="group" aria-label="Filter the collection">
+    ${['All', 'Rings', 'Necklaces', 'Earrings'].map(c => `<button id="cat-${c}" data-act="cat" data-id="${c}" aria-pressed="${c === ui.cat}">${c}</button>`).join('')}
+  </div>
+</div>
+<div class="cat">${list.map(d => `<a class="item" href="product.html?id=${d.id}">${pic(d.photos[0], d.name)}
+  <div class="meta"><b>${esc(d.name)}</b><span class="num">${price(d)}</span></div><small>${esc(d.materials)}</small></a>`).join('')
+  || '<p class="mute">Nothing in this category yet. Ask for a custom piece and it can be made for you.</p>'}</div>
+
+<section class="made">
+  <img class="ph wide" src="images/bench-hands.jpg" alt="Hands working with small tools at a jeweller's bench" loading="lazy">
+  <div>
+    <h2>Every order is made by hand, start to finish</h2>
+    <ol class="how">
+      <li><b>Tell us what you have in mind</b><span>Pick a piece from the shop or describe your own, with photos if you have them.</span></li>
+      <li><b>Agree the design and price</b><span>The owner replies on your phone or WhatsApp number.</span></li>
+      <li><b>Follow it being made</b><span>Use your order number to see each stage, from received to delivered.</span></li>
+    </ol>
+    <a class="btn" href="request.html">Request a custom piece</a>
+  </div>
+</section>`);
+  },
+  acts: { cat: d => ui.cat = d.id },
+});
+</script>
+</body>
+</html>

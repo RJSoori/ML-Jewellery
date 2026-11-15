@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design library | ML Jewellery owner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W10 Design library
+const ui = { id: Q.get('id') || 'pearl-drop', q: '', f: {} };
+const match = d => (!ui.q || (d.name + ' ' + d.materials).toLowerCase().includes(ui.q.toLowerCase())) && Object.entries(ui.f).every(([k, v]) => !v || d[k] === v);
+const grid = () => S.designs.filter(match).map(d => `<button id="sel-${d.id}" class="${d.id === ui.id ? 'on' : ''}" data-act="sel" data-id="${d.id}" aria-pressed="${d.id === ui.id}">${pic(d.photos[0], '', 'sq')}<b>${esc(d.name)}</b><small>${d.type}, ${esc(d.material.toLowerCase())}</small></button>`).join('')
+  || '<p class="mute">No designs match. Clear the search or filters to see them all.</p>';
+
+const designDlg = d => dlg(d ? 'Edit design' : 'Add design', `
+${fld('Name', `<input name="name" required value="${esc(d?.name)}">`)}
+<div class="cols2">
+  ${fld('Type', `<select name="type">${opts(TYPES, d?.type)}</select>`)}${fld('Main material', `<input name="material" required value="${esc(d?.material)}">`)}
+  ${fld('Colour', `<input name="colour" required value="${esc(d?.colour)}">`)}${fld('Style', `<input name="style" required value="${esc(d?.style)}">`)}
+  ${fld('Time (hours)', `<input name="hours" type="number" min="0" step="0.5" required value="${d?.hours ?? ''}">`)}${fld('Materials cost (Rs.)', `<input name="matCost" type="number" min="0" required value="${d?.matCost ?? ''}">`)}
+</div>
+${fld('Materials used', `<input name="materials" required value="${esc(d?.materials)}">`)}
+${fld('Steps, one per line', `<textarea name="steps" required>${esc(d?.steps.join('\n'))}</textarea>`)}
+${fld('Notes', `<input name="notes" value="${esc(d?.notes)}">`)}
+${fld(d ? 'Replace main photo' : 'Photo', '<input name="photo" type="file" accept="image/*">')}`,
+  async (v, f) => {
+    const file = f.photo.files[0], shot = file && await shrink(file);
+    const data = { name: v.name, type: v.type, material: v.material, colour: v.colour, style: v.style, materials: v.materials, notes: v.notes, hours: +v.hours, matCost: +v.matCost, steps: v.steps.split('\n').map(s => s.trim()).filter(Boolean) };
+    if (d) { Object.assign(d, data); if (shot) d.photos[0] = shot; toast('Design updated'); }
+    else { const id = 'd' + Date.now(); S.designs.push({ id, price: 0, brand: 500, craft: '', care: '', published: false, photos: shot ? [shot] : [], ...data }); ui.id = id; toast('Design added. Cost it, then publish its product page.'); }
+  });
+
+page({
+  view: () => {
+    const d = byId(ui.id), uniq = k => [...new Set(S.designs.map(d => d[k]))];
+    return owner('designs', `<div class="head"><h1>Design library</h1><button class="btn push" data-act="add">Add design</button></div>
+<div class="row" style="margin-bottom:22px">
+  <input id="dq" type="search" placeholder="Search designs" aria-label="Search designs" value="${esc(ui.q)}" data-in="q" style="flex:1;min-width:200px;max-width:340px;border-radius:999px;padding-left:18px">
+  ${[['type', 'Type'], ['material', 'Material'], ['colour', 'Colour'], ['style', 'Style']].map(([k, l]) => `<select id="f-${k}" class="pill" data-ch="filter" data-id="${k}" aria-label="Filter by ${l.toLowerCase()}">${opts(uniq(k), ui.f[k], l)}</select>`).join('')}
+</div>
+<div class="split">
+  <div id="grid" class="lib">${grid()}</div>
+  ${d ? `<div class="panel pad sticky">
+    ${pic(d.photos[0], d.name, 'wide')}
+    <h2 style="margin-top:16px;font-size:24px;letter-spacing:-.02em">${esc(d.name)}</h2>
+    <dl class="facts"><dt>Materials</dt><dd>${esc(d.materials)}</dd><dt>Time</dt><dd>${d.hours} hours</dd><dt>Shop</dt><dd>${d.published ? 'Published' : 'Not published yet'}</dd></dl>
+    <h3>Steps</h3><ol class="plain">${d.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+    <h3>Notes</h3><p class="mute">${esc(d.notes) || 'None'}</p>
+    <div class="row" style="margin-top:18px"><button class="btn ghost" data-act="edit" data-id="${d.id}">Edit design</button><a href="owner-costing.html?id=${d.id}">Costing</a><a href="owner-pages.html?id=${d.id}">Product page</a></div>
+  </div>` : '<div class="panel pad"><p class="mute">Select a design to see its steps and notes.</p></div>'}
+</div>`);
+  },
+  acts: { sel: d => ui.id = d.id, add: () => designDlg(), edit: d => designDlg(byId(d.id)) },
+  changes: { filter: (v, d) => { ui.f[d.id] = v; } },
+  inputs: { q: v => { ui.q = v; $('#grid').innerHTML = grid(); } }, // redraw only the grid so the search box keeps its caret
+});
+</script>
+</body>
+</html>

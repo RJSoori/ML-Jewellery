@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About | ML Jewellery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// About (linked from the nav; no wireframe)
+page({
+  view: () => shop('about', `<div class="made" style="margin-top:8px">
+  <div>
+    <h1>Made by hand, in small numbers</h1>
+    <p style="max-width:52ch">ML Jewellery is a handmade jewellery business. Every piece is designed and made by hand, in small numbers or to order.</p>
+    <p style="max-width:52ch">Browse the collection, or tell us what you have in mind. The owner replies on your phone or WhatsApp number to agree the design and price, and you can follow the order while it is being made.</p>
+    <div class="row" style="margin-top:22px"><a class="btn" href="request.html">Request a custom piece</a><a class="btn ghost" href="index.html">Browse the shop</a></div>
+  </div>
+  <img class="ph wide" src="images/bench-desk.jpg" alt="A wooden jeweller's bench with tools laid out">
+</div>
+<h2 style="margin-top:80px">Photo credits</h2>
+<p class="mute small" style="max-width:70ch">Sample photos in this prototype are stand-ins, not ML Jewellery's own pieces. Most are from Burst by Shopify.
+The wire wrap ring photos are "Peruvian opal wire wrapped ring with brass band" by <a href="https://www.flickr.com/photos/8699239@N04/4134119626">Zawezome on Flickr</a>, used under <a href="https://creativecommons.org/licenses/by/2.0/">CC BY 2.0</a>.</p>`),
+});
+</script>
+</body>
+</html>

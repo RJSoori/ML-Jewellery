@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orders | ML Jewellery owner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W6 Order list and order detail
+const ui = { id: Q.get('id') || 'ML-0123', f: { stage: '', source: '', due: '' } };
+page({
+  view: () => {
+    const f = ui.f, o = order(ui.id), d = o && designOf(o);
+    const list = S.orders.filter(x => (!f.stage || x.stage === f.stage) && (!f.source || x.source === f.source) && (!f.due || (f.due === 'over' ? isOver(x) : dueSoon(x))));
+    return owner('orders', `<div class="head"><h1>Orders</h1><button class="btn push" data-act="addOrder">Add order</button></div>
+<div class="row" style="margin-bottom:18px">
+  <select id="fStage" class="pill" data-ch="filter" data-id="stage" aria-label="Filter by stage">${opts(STAGES, f.stage, 'All stages')}</select>
+  <select id="fSource" class="pill" data-ch="filter" data-id="source" aria-label="Filter by source">${opts(SOURCES, f.source, 'All sources')}</select>
+  <select id="fDue" class="pill" data-ch="filter" data-id="due" aria-label="Filter by due date">${opts([['week', 'Due this week'], ['over', 'Overdue']], f.due, 'Any due date')}</select>
+</div>
+<div class="split">
+  ${table(['Order', 'Item', 'Source', 'Stage', 'Due'], list.map(x => row([x.id, esc(x.item), x.source, stageTag(x.stage), isOver(x) ? `<span class="tag warn"><i></i>${fd(x.due)}, late</span>` : fd(x.due)], pick('sel', x.id, x === o))), 'No orders match these filters.')}
+  ${o ? `<form class="panel pad sticky" data-form="order">
+    <div class="orderitem">${d ? pic(d.photos[0], '') : ''}<div><span class="mute small">Order ${o.id}</span><br><b>${esc(o.item)}</b></div></div>
+    <dl class="facts"><dt>Customer</dt><dd>${esc(o.customer)}</dd><dt>Phone</dt><dd>${esc(o.phone)}</dd><dt>Source</dt><dd>${o.source}</dd>${o.budget ? `<dt>Budget</dt><dd>${rs(o.budget)}</dd>` : ''}</dl>
+    ${o.notes ? `<p class="small" style="margin-bottom:18px">${esc(o.notes)}</p>` : ''}
+    ${fld('Stage', `<select id="oStage" name="stage">${opts(STAGES, o.stage)}</select>`)}
+    ${fld('Due date', `<input id="oDue" name="due" type="date" required value="${o.due}">`)}
+    <div class="f"><span>Reference photos</span>${o.photos.length ? `<div class="refs">${o.photos.map(u => `<img src="${u}" alt="Reference photo from the customer">`).join('')}</div>` : '<p class="mute small" style="margin:0">The customer did not send any.</p>'}</div>
+    <label class="check"><input type="checkbox" name="assigned"${o.assigned ? ' checked' : ''}> Assigned to assistant${o.done ? ' <span class="mute">(marked done)</span>' : ''}</label>
+    <button class="btn block">Save changes</button>
+  </form>` : '<div class="panel pad"><p class="mute">Select an order to see its details.</p></div>'}
+</div>`);
+  },
+  acts: {
+    sel: d => ui.id = d.id,
+    addOrder: () => dlg('Add order', `
+${fld('Item', `<input name="item" required list="dnames"><datalist id="dnames">${S.designs.map(d => `<option value="${esc(d.name)}">`).join('')}</datalist>`)}
+${fld('Customer name', '<input name="customer" required>')}
+${fld('Phone or WhatsApp number', '<input name="phone" type="tel" required pattern="[0-9+ ]{9,15}" title="9 to 15 digits">')}
+<div class="cols2">${fld('Source', `<select name="source">${opts(SOURCES, 'WhatsApp')}</select>`)}${fld('Due date', `<input name="due" type="date" required min="${TODAY}">`)}</div>`,
+      v => { const id = nextOrderId(); S.orders.push({ ...v, id, designId: S.designs.find(d => d.name === v.item)?.id, stage: 'Received', assigned: false, done: false, updated: TODAY, notes: '', photos: [] }); ui.id = id; toast(`Order ${id} added`); }),
+  },
+  changes: { filter: (v, d) => { ui.f[d.id] = v; } },
+  forms: {
+    order: v => { const o = order(ui.id); o.stage = v.stage; o.due = v.due; o.assigned = !!v.assigned; if (o.assigned) o.done = false; o.updated = TODAY; toast(`Order ${o.id} saved. The customer sees "${o.stage}" on tracking.`); },
+  },
+});
+</script>
+</body>
+</html>

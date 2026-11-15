@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product | ML Jewellery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W2 Product page with craft story and care guide
+const ui = { shot: 0 };
+const d = byId(Q.get('id'));
+if (d) document.title = `${d.name} | ML Jewellery`;
+page({
+  view: () => !d
+    ? shop('index', `<h1>This piece is not in the shop</h1><p class="mute">It may have been renamed or removed.</p><a class="btn" href="index.html">Back to catalogue</a>`)
+    : shop('index', `<div class="product">
+  <div>
+    ${pic(d.photos[ui.shot] || d.photos[0], d.name)}
+    ${d.photos.length > 1 ? `<div class="thumbs">${d.photos.map((p, i) => `<button id="shot-${i}" data-act="shot" data-id="${i}" aria-pressed="${i === ui.shot}" aria-label="Show photo ${i + 1} of ${d.photos.length}">${pic(p, '')}</button>`).join('')}</div>` : ''}
+  </div>
+  <div>
+    <h1>${esc(d.name)}</h1>
+    <p class="price num">${price(d)}</p>
+    <div class="story"><h2>Materials</h2><p>${esc(d.materials)}</p></div>
+    <div class="story"><h2>Craft story</h2><p>${esc(d.craft) || 'Coming soon.'}</p></div>
+    <div class="story"><h2>Care guide</h2><p>${esc(d.care) || 'Coming soon.'}</p></div>
+    <div class="row" style="margin-top:14px"><a class="btn" href="request.html?like=${d.id}">Request a similar piece</a><a class="btn ghost" href="index.html">Back to catalogue</a></div>
+  </div>
+</div>`),
+  acts: { shot: x => ui.shot = +x.id },
+});
+</script>
+</body>
+</html>

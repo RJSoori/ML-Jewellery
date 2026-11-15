@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Costing | ML Jewellery owner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W9 Costing and price suggestion
+const ui = { id: Q.get('id') || 'pearl-drop', quote: '' };
+const cur = () => byId(ui.id) || S.designs[0];
+page({
+  view: () => {
+    const d = cur(), c = cost(d), gap = c.hi - c.lo;
+    return owner('costing', `<div class="head"><h1>Costing</h1></div>
+<form data-form="costing" class="split">
+  <div>
+    <div style="max-width:420px">${fld('Design', `<select id="cDesign" data-ch="design">${opts(S.designs.map(d => [d.id, d.name]), d.id)}</select>`)}</div>
+    ${table(['Cost item', 'Amount', 'Notes'], [
+      row(['Materials', `Rs. <input id="cMat" class="mini num" type="number" min="0" step="50" value="${d.matCost}" data-ch="matCost" aria-label="Materials cost in rupees">`, 'From purchases']),
+      row(['Time and effort', `<span class="num">${rs(c.time)}</span>`, `<input id="cHours" class="mini num" type="number" min="0" step="0.5" value="${d.hours}" data-ch="hours" aria-label="Hours of work"> hours`]),
+      row(['Brand value', `Rs. <input id="cBrand" class="mini num" type="number" min="0" step="100" value="${d.brand}" data-ch="brand" aria-label="Brand value in rupees">`, 'Set by owner']),
+      row(['<b>Total cost</b>', `<b class="num">${rs(c.total)}</b>`, '']),
+    ])}
+    <div class="suggest">
+      <span>Suggested price range</span>
+      <p class="big num">${rs(c.lo)} to ${rs(c.hi)}</p>
+      <p class="note">Based on cost, time taken and prices of similar past pieces.</p>
+      <p class="note">Reason: similar ${d.type.toLowerCase().replace(/s?$/, 's')} sold at ${rs(c.lo + .3 * gap)} and ${rs(c.hi - .3 * gap)}.</p>
+    </div>
+  </div>
+  <aside class="panel pad">
+    <div class="orderitem">${pic(d.photos[0], '')}<div><b>${esc(d.name)}</b><br><span class="mute small">Shop price: ${d.price ? rs(d.price) : 'not set'}</span></div></div>
+    ${fld('Price to quote (Rs.)', `<input id="quote" name="quote" class="num" type="number" min="0" step="50" required placeholder="${(c.lo + c.hi) / 2}" value="${esc(ui.quote)}" data-in="quote">`)}
+    <button class="btn block" value="use">Use this price in the quote</button>
+    <button class="btn ghost block" value="save" formnovalidate>Save costing</button>
+  </aside>
+</form>`);
+  },
+  changes: {
+    design: v => { ui.id = v; ui.quote = ''; },
+    matCost: v => { cur().matCost = Math.max(0, +v || 0); },
+    hours: v => { cur().hours = Math.max(0, +v || 0); },
+    brand: v => { cur().brand = Math.max(0, +v || 0); },
+  },
+  inputs: { quote: v => ui.quote = v },
+  forms: {
+    costing: (v, f, btn) => { const d = cur(); if (btn?.value === 'use') { d.price = +v.quote; toast(`${d.name} is now quoted from ${rs(d.price)}`); } else toast('Costing saved'); },
+  },
+});
+</script>
+</body>
+</html>

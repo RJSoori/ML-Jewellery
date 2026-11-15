@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My designs | ML Jewellery assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// W13 Assistant view: assigned designs and steps only, no prices
+const ui = { id: null };
+page({
+  view: () => {
+    const list = S.orders.filter(o => o.assigned && !o.done).sort((a, b) => a.due < b.due ? -1 : 1), o = list.find(o => o.id === ui.id) || list[0], d = o && designOf(o);
+    return `<a class="skip" href="#main">Skip to content</a><div class="app"><aside class="side">
+<span class="brand">ML Jewellery<span class="role">Assistant</span></span>
+<nav aria-label="Assistant"><a href="assistant.html" aria-current="page">My designs</a></nav>
+<div class="sidefoot"><p>Prices, costing and reports are not shown to assistants.</p><a href="staff.html">Switch role</a></div>
+</aside><main id="main">
+<div class="head"><h1>My assigned designs</h1></div>
+<div class="split" style="grid-template-columns:minmax(0,2fr) minmax(0,3fr)">
+  ${table(['Design', 'Due'], list.map(x => row([esc(x.item), fd(x.due)], pick('sel', x.id, x === o))), 'Nothing is assigned to you right now.')}
+  ${o ? `<div class="panel pad">
+    <h2 style="font-size:26px;letter-spacing:-.02em">${esc(o.item)}</h2>
+    <p class="mute">Due ${fd(o.due, 1)}</p>
+    ${d ? pic(d.photos[0], d.name, 'wide') : ''}
+    ${d ? `<h3>Steps</h3><ol class="plain">${d.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>${d.notes ? `<h3>Notes</h3><p class="mute">${esc(d.notes)}</p>` : ''}`
+        : `<h3>Notes from the customer</h3><p class="mute">${esc(o.notes) || 'Ask the owner for the steps of this custom piece.'}</p>`}
+    <h3>Step photos</h3>
+    <div class="cols3" style="margin-bottom:22px">${STEP_SHOTS.map((s, i) => pic(s, `Workshop photo ${i + 1}`, 'sq')).join('')}</div>
+    <button class="btn" data-act="done" data-id="${o.id}">Mark as done</button>
+  </div>` : ''}
+</div></main></div>`;
+  },
+  acts: {
+    sel: d => ui.id = d.id,
+    done: d => { const o = order(d.id); o.done = true; o.assigned = false; o.updated = TODAY; if (STAGES.indexOf(o.stage) < 3) o.stage = 'Finishing'; ui.id = null; toast(`${o.item} marked as done. The owner can see it under Orders.`); },
+  },
+});
+</script>
+</body>
+</html>

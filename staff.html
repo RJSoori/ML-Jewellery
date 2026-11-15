@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staff sign in | ML Jewellery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<noscript>This prototype needs JavaScript.</noscript>
+<script src="js/core.js"></script>
+<script>
+// Staff sign in (role choice; no wireframe, no password in the prototype)
+page({
+  view: () => shop('staff', `<h1>Staff sign in</h1>
+<p class="mute">Choose a role. The prototype does not ask for a password.</p>
+<div class="roles">
+  <a href="owner-dashboard.html"><b>Owner</b><span>Orders, inventory, suppliers, costing, designs, product pages and reports.</span></a>
+  <a href="assistant.html"><b>Assistant</b><span>Assigned designs and their steps. No prices, costing or reports.</span></a>
+</div>
+<p class="small mute" style="margin-top:36px">Sample data is saved in this browser. <button class="linkbtn" data-act="reset">Reset demo data</button></p>`),
+});
+</script>
+</body>
+</html>
